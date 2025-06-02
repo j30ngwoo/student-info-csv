@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <title>CSV 변환기</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 40px;
+                background-color: #f4f4f4;
+            }
+    
+            h1 {
+                margin-bottom: 20px;
+            }
+    
+            textarea {
+                width: 100%;
+                min-height: 200px;
+                margin-bottom: 20px;
+                font-family: monospace;
+                padding: 10px;
+                box-sizing: border-box;
+            }
+    
+            button {
+                padding: 10px 20px;
+                margin-right: 10px;
+                font-weight: bold;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+<body>
+    <h1>학생정보 CSV 변환기</h1>
+    <textarea id="inputData" placeholder="데이터를 입력하세요..."></textarea><br>
+    <button onclick="convertToCSV()">CSV 보기</button>
+    <button onclick="downloadCSV()">CSV 다운로드</button>
+    <h2>CSV 결과</h2>
+    <textarea id="outputCSV" readonly></textarea>
+    <script src="js/script.js"></script>
+</body>
+</html>
