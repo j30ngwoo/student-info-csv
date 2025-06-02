@@ -14,10 +14,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t menu-page:latest .
+        run: docker build -t student-info-csv:latest .
 
       - name: Save Docker image to tar
-        run: docker save menu-page:latest -o menu-page.tar
+        run: docker save student-info-csv:latest -o student-info-csv.tar
 
       - name: Install rsync
         run: sudo apt-get update && sudo apt-get install -y rsync
@@ -26,7 +26,7 @@ jobs:
         run: |
           echo "${{ secrets.SSH_KEY }}" > private_key
           chmod 600 private_key
-          rsync -avz -e "ssh -i private_key -p ${{ secrets.SSH_PORT }}" menu-page.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/
+          rsync -avz -e "ssh -i private_key -p ${{ secrets.SSH_PORT }}" student-info-csv.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@master
@@ -36,15 +36,15 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            docker load -i ~/menu-page.tar
+            docker load -i ~/student-info-csv.tar
 
-            docker stop menu-page-container || true
-            docker rm menu-page-container || true
+            docker stop student-info-csv-container || true
+            docker rm student-info-csv-container || true
             docker image prune -f || true
 
             docker run -d \
               -p 9001:80 \
-              --name menu-page-container \
-              menu-page:latest
+              --name student-info-csv-container \
+              student-info-csv:latest
 
-            rm -f ~/menu-page.tar
+            rm -f ~/student-info-csv.tar
