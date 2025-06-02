@@ -1,0 +1,55 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t menu-page:latest .
+
+      - name: Save Docker image to tar
+        run: docker save menu-page:latest -o menu-page.tar
+
+      - name: Install rsync
+        run: sudo apt-get update && sudo apt-get install -y rsync
+
+      - name: Add SSH host to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Transfer Docker image
+        run: |
+          echo "${{ secrets.SSH_KEY }}" > private_key
+          chmod 600 private_key
+          rsync -avz -e "ssh -i private_key -p ${{ secrets.SSH_PORT }}" menu-page.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            docker load -i ~/menu-page.tar
+
+            docker stop menu-page-container || true
+            docker rm menu-page-container || true
+            docker image prune -f || true
+
+            docker run -d \
+              -p 9001:80 \
+              --name menu-page-container \
+              menu-page:latest
+
+            rm -f ~/menu-page.tar
